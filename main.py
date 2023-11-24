@@ -1,80 +1,79 @@
 import tkinter as tk
-import csv
-import datetime
+import sqlite3
 
+# Function to view sales data
+def view_sales():
+  sales_data = cursor.execute('SELECT * FROM sales').fetchall()
 
-def save_purchase():
-    # Get customer and product details from entry fields
-    customer_name = entry_customer_name.get()
-    product_name = entry_product_name.get()
-    product_code = entry_product_code.get()
-    product_price = float(entry_product_price.get())
-    product_amount = int(entry_product_amount.get())
+  for row in sales_data:
+    product_name, quantity, price = row
+    print(
+      f'Product Name: {product_name}, Quantity: {quantity}, Price: {price}')
 
-    # Calculate total price
-    total_price = product_price * product_amount
+# Function to add a product to the database
+def add_product():
+  product_name = product_name_entry.get()
+  quantity = int(quantity_entry.get())
+  price = float(price_entry.get())
 
-    # Get current timestamp
-    current_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+  cursor.execute('INSERT INTO sales VALUES (?, ?, ?)',
+                 (product_name, quantity, price))
+  conn.commit()
 
-    # Prepare data for CSV file
-    purchase_data = [current_timestamp, customer_name, product_code, product_name, product_price, product_amount, total_price]
+  clear_fields()
 
-    # Open CSV file in append mode
-    with open('purchases.csv', 'a', newline='') as csvfile:
-        # Create CSV writer object
-        csv_writer = csv.writer(csvfile)
+# Function to clear entry fields
+def clear_fields():
+  product_name_entry.delete(0, tk.END)
+  quantity_entry.delete(0, tk.END)
+  price_entry.delete(0, tk.END)
 
-        # Write purchase data to CSV file
-        csv_writer.writerow(purchase_data)
+# Create a database connection
+conn = sqlite3.connect('sales_data.db')
+cursor = conn.cursor()
 
-    # Clear entry fields after saving
-    entry_customer_name.delete(0, tk.END)
-    entry_product_code.delete(0, tk.END)
-    entry_product_name.delete(0, tk.END)
-    entry_product_price.delete(0, tk.END)
-    entry_product_amount.delete(0, tk.END)
+# Create the sales table if it doesn't exist
+cursor.execute(
+  'CREATE TABLE IF NOT EXISTS sales (product_name TEXT, quantity INTEGER, price REAL)'
+)
 
-# Create Tkinter window
+# Define the GUI window
 window = tk.Tk()
 window.title('Sales Management System')
-px = window.geometry()
 
-# Create labels and entry fields for customer details
-label_customer_name = tk.Label(window, text="Customer Name:")
-entry_customer_name = tk.Entry(window)
+# Create product name entry field
+product_name_label = tk.Label(window, text='Product Name:')
+product_name_label.grid(row=0, column=0)
+product_name_entry = tk.Entry(window)
+product_name_entry.grid(row=0, column=1)
 
-label_customer_name.grid(row=0, column=0)
-entry_customer_name.grid(row=0, column=1)
+img = tk.PhotoImage(file='icons/icon.png')
+imgl = tk.Label(window, image=img)
+imgl.grid(row=1, column=2)
+#Create quantity entry field
+quantity_label = tk.Label(window, text='Quantity:')
+quantity_label.grid(row=1, column=0)
+quantity_entry = tk.Entry(window)
+quantity_entry.grid(row=1, column=1)
 
-# Create labels and entry fields for product information
-label_product_code = tk.Label(window, text="Product Code:")
-entry_product_code = tk.Entry(window)
+# Create price entry field
+price_label = tk.Label(window, text='Price:')
+price_label.grid(row=2, column=0)
+price_entry = tk.Entry(window)
+price_entry.grid(row=2, column=1)
 
-label_product_code.grid(row=1, column=0)
-entry_product_code.grid(row=1, column=1)
+# Define the add product button
+add_product_button = tk.Button(window, text='Add Product', command=add_product)
+add_product_button.grid(row=3, column=0, columnspan=2)
 
-label_product_name = tk.Label(window, text="Product Name:")
-entry_product_name = tk.Entry(window)
+# Define the view sales button
+view_sales_button = tk.Button(window, text='View Sales', command=view_sales)
+view_sales_button.grid(row=4, column=0, columnspan=2)
 
-label_product_name.grid(row=2, column=0)
-entry_product_name.grid(row=2, column=1)
+# Define the clear button
+clear_button = tk.Button(window, text='Clear', command=clear_fields)
+clear_button.grid(row=5, column=0, columnspan=2)
 
-label_product_price = tk.Label(window, text="Product Price:")
-entry_product_price = tk.Entry(window)
 
-label_product_price.grid(row=3, column=0)
-entry_product_price.grid(row=3, column=1)
-
-label_product_amount = tk.Label(window, text="Product Quantity:")
-entry_product_amount = tk.Entry(window)
-
-label_product_amount.grid(row=4, column=0)
-entry_product_amount.grid(row=4, column=1)
-
-# Create button to save purchase data
-button_save = tk.Button(window, text="Save Purchase", command=save_purchase)
-button_save.grid(row=5, column=1)
-# Run the Tkinter main loop
-window.mainloop() 
-print(px)
+# Start the GUI event loop
+window.mainloop()
